@@ -1,0 +1,85 @@
+-- Script made by shots (@kmlt on discord)
+-- Please do not redistribute without my permission.
+local gui = Instance.new("ScreenGui")
+local main = Instance.new("Frame")
+local drag = Instance.new("Frame")
+local btn = Instance.new("TextButton")
+
+gui.Name = "RobloxInfCashGUI"
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+gui.ResetOnSpawn = false
+
+main.Name = "MainFrame"
+main.Parent = gui
+main.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+main.Position = UDim2.new(0.35, 0, 0.35, 0)
+main.Size = UDim2.new(0, 300, 0, 200)
+main.Active = true
+
+drag.Name = "DragArea"
+drag.Parent = main
+drag.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+drag.Size = UDim2.new(1, 0, 0.15, 0)
+drag.Active = true
+
+btn.Name = "InfCashButton"
+btn.Parent = main
+btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+btn.Position = UDim2.new(0.1, 0, 0.35, 0)
+btn.Size = UDim2.new(0.8, 0, 0.3, 0)
+btn.Font = Enum.Font.SourceSans
+btn.Text = "Inf Cash"
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.TextScaled = true
+btn.TextSize = 14.000
+btn.TextWrapped = true
+
+local dragging, dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+drag.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+drag.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        update(input)
+    end
+end)
+
+btn.MouseButton1Down:Connect(function()
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GiveQuestCash"):FireServer(math.huge, true)
+end)
+
+local function makeRainbow(obj)
+    local hue = 0
+    while true do
+        hue = (hue + 1) % 360
+        obj.BackgroundColor3 = Color3.fromHSV(hue / 360, 1, 1)
+        wait(0.005)
+    end
+end
+
+spawn(function() makeRainbow(main) end)
+spawn(function() makeRainbow(drag) end)
+spawn(function() makeRainbow(btn) end)
