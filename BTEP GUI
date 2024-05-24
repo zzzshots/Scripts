@@ -1,0 +1,24 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("BTEP [SHOTSWARE]", "DarkTheme")
+
+local InfCashWindow = Library.CreateLib("Infinite Cash", "DarkTheme")
+local InfCashTab = InfCashWindow:NewTab("Infinite Cash")
+local InfCashSection = InfCashTab:NewSection("Infinite Cash")
+
+local function infCashScript()
+    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GiveQuestCash"):FireServer(math.huge, true)
+end
+
+local InfCashButton = InfCashSection:NewButton("Inf Cash", "Gives infinite cash", infCashScript)
+
+local MiscellaneousTab = Window:NewTab("Miscellaneous")
+local MiscellaneousSection = MiscellaneousTab:NewSection("Infinite Yield")
+local InfYieldButton = MiscellaneousSection:NewButton("Execute Infinite Yield", "Runs Infinite Yield", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+local CreditsTab = Window:NewTab("Credits")
+local CreditsSection = CreditsTab:NewSection("Script Maker: Shots")
+local CreditsSection2 = CreditsTab:NewSection("My Discord: kmlt")
+local CreditsSection3 = CreditsTab:NewSection("My Biolinks: https://guns.lol/sh0ts")
+local CreditsSection4 = CreditsTab:NewSection("My Biolinks: https://feds.lol/shots")
