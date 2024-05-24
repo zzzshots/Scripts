@@ -1,8 +1,7 @@
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("BTEP [SHOTSWARE]", "DarkTheme")
 
-local InfCashWindow = Library.CreateLib("Infinite Cash", "DarkTheme")
-local InfCashTab = InfCashWindow:NewTab("Infinite Cash")
+local InfCashTab = Window:NewTab("Infinite Cash")
 local InfCashSection = InfCashTab:NewSection("Infinite Cash")
 
 local function infCashScript()
@@ -13,8 +12,37 @@ local InfCashButton = InfCashSection:NewButton("Inf Cash", "Gives infinite cash"
 
 local MiscellaneousTab = Window:NewTab("Miscellaneous")
 local MiscellaneousSection = MiscellaneousTab:NewSection("Infinite Yield")
+
 local InfYieldButton = MiscellaneousSection:NewButton("Execute Infinite Yield", "Runs Infinite Yield", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+local ToggleUITab = Window:NewTab("Toggle UI")
+local ToggleUISection = ToggleUITab:NewSection("Toggle UI")
+
+local function toggleUI()
+    Library:ToggleUI()
+end
+
+local UIS = game:GetService("UserInputService")
+_G.KeybindUI = Enum.KeyCode.V
+
+local function changeKeybind(txt)
+    local key = string.upper(string.sub(txt, 1, 1))
+    if Enum.KeyCode[key] then
+        _G.KeybindUI = Enum.KeyCode[key]
+    else
+        warn("Invalid key.")
+    end
+end
+
+ToggleUISection:NewTextBox("Toggle UI Keybind", "Enter a key to toggle UI", changeKeybind)
+
+UIS.InputBegan:Connect(function(input, k)
+    if k then return end
+    if input.KeyCode == _G.KeybindUI then
+       toggleUI()
+    end
 end)
 
 local CreditsTab = Window:NewTab("Credits")
