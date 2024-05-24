@@ -40,7 +40,3 @@ local CreditsSection = CreditsTab:NewSection("Script Maker: Shots")
 local CreditsSection2 = CreditsTab:NewSection("My Discord: kmlt")
 local CreditsSection3 = CreditsTab:NewSection("My Biolinks: https://guns.lol/shots")
 local CreditsSection4 = CreditsTab:NewSection("My Biolinks: https://feds.lol/shots")
-
-spawn(function() makeRainbow(main) end)
-spawn(function() makeRainbow(drag) end)
-spawn(function() makeRainbow(btn) end)
