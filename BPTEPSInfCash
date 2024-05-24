@@ -1,84 +1,45 @@
 -- Script made by shots (@kmlt on discord)
 -- Please do not redistribute without my permission.
-local gui = Instance.new("ScreenGui")
-local main = Instance.new("Frame")
-local drag = Instance.new("Frame")
-local btn = Instance.new("TextButton")
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Dimensional Craftwars", "DarkTheme")
 
-gui.Name = "RobloxInfCashGUI"
-gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-gui.ResetOnSpawn = false
+local InfCashSection = Window:NewSection("Inf Cash")
 
-main.Name = "MainFrame"
-main.Parent = gui
-main.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-main.Position = UDim2.new(0.35, 0, 0.35, 0)
-main.Size = UDim2.new(0, 300, 0, 200)
-main.Active = true
-
-drag.Name = "DragArea"
-drag.Parent = main
-drag.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-drag.Size = UDim2.new(1, 0, 0.15, 0)
-drag.Active = true
-
-btn.Name = "InfCashButton"
-btn.Parent = main
-btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-btn.Position = UDim2.new(0.1, 0, 0.35, 0)
-btn.Size = UDim2.new(0.8, 0, 0.3, 0)
-btn.Font = Enum.Font.SourceSans
-btn.Text = "Inf Cash"
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.TextScaled = true
-btn.TextSize = 14.000
-btn.TextWrapped = true
-
-local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-drag.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = main.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-drag.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        update(input)
-    end
-end)
-
-btn.MouseButton1Down:Connect(function()
+local function giveInfiniteCash()
     game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("GiveQuestCash"):FireServer(math.huge, true)
+end
+
+local InfCashButton = InfCashSection:NewButton("Inf Cash", "Gives you infinite cash", giveInfiniteCash)
+
+local MiscellaneousTab = Window:NewTab("Miscellaneous")
+local MiscellaneousSection = MiscellaneousTab:NewSection("Miscellaneous")
+
+local function executeInfiniteYieldScript()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+end
+
+local InfiniteYieldButton = MiscellaneousSection:NewButton("Infinite Yield", "Executes Infinite Yield", executeInfiniteYieldScript)
+
+local UIS = game:GetService("UserInputService")
+_G.KeybindUI = "V"
+local SettingsTab = Window:NewTab("Settings")
+local SettingsSection = SettingsTab:NewSection("Change UI Keybind")
+SettingsSection:NewTextBox("Toggle UI", "The Default Keybind is V, you can change it.", function(txt)
+    _G.KeybindUI = string.upper(string.sub(txt, 1, 1))
 end)
 
-local function makeRainbow(obj)
-    local hue = 0
-    while true do
-        hue = (hue + 1) % 360
-        obj.BackgroundColor3 = Color3.fromHSV(hue / 360, 1, 1)
-        wait(0.005)
+UIS.InputBegan:Connect(function(input, k)
+    if k then return end
+    if input.KeyCode == Enum.KeyCode[_G.KeybindUI] then
+       Library:ToggleUI()
     end
-end
+end)
+
+local CreditsTab = Window:NewTab("Credits")
+local CreditsSection = CreditsTab:NewSection("Script Maker: Shots")
+local CreditsSection2 = CreditsTab:NewSection("My Discord: kmlt")
+local CreditsSection3 = CreditsTab:NewSection("My Biolinks: https://guns.lol/shots")
+local CreditsSection4 = CreditsTab:NewSection("My Biolinks: https://feds.lol/shots")
 
 spawn(function() makeRainbow(main) end)
 spawn(function() makeRainbow(drag) end)
