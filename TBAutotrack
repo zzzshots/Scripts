@@ -35,6 +35,68 @@ Supported Games: Timebomb Duels, Custom Minigames.
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local teamCheck = false
 local fov = 90
 local smoothing = 0.1
