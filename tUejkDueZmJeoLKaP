@@ -7,7 +7,7 @@ local MouseIsMovingLF = false
 local LastFace = Vector3.new(0,0,0)
 local DirChange = 0
 
-local Bind = Enum.KeyCode.MouseLeftButton
+local Bind = Enum.KeyCode.Space
 local Strength = 10
 
 local UseGradient = true
