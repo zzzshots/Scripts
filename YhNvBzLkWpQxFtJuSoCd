@@ -4,6 +4,7 @@ local smoothing = 0.1
 local predictionFactor = 0
 local highlightEnabled = false
 local lockPart = "HumanoidRootPart"
+local fovVisible = true
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -21,10 +22,8 @@ local visibleDuration = 5
 local colorTransitionTime = 5
 local elapsedTime = 0
 
-message.Visible = true
-
 local FOVring = Drawing.new("Circle")
-FOVring.Visible = true
+FOVring.Visible = fovVisible
 FOVring.Thickness = 1
 FOVring.Radius = fov
 FOVring.Transparency = 0.8
@@ -62,6 +61,7 @@ end
 
 local function updateFOVRing(mousePosition)
     FOVring.Position = mousePosition
+    FOVring.Visible = fovVisible
 end
 
 local function highlightTarget(target)
@@ -99,7 +99,7 @@ local function updateTracer(target, mousePosition)
         local offsetY = math.sin(radians) * FOVring.Radius
         Tracer.From = FOVring.Position + Vector2.new(offsetX, offsetY)
         Tracer.To = Vector2.new(screenPoint.X, screenPoint.Y)
-        Tracer.Visible = true
+        Tracer.Visible = fovVisible
     else
         Tracer.Visible = false
     end
@@ -161,5 +161,13 @@ RunService.RenderStepped:Connect(function()
         if elapsedTime >= visibleDuration then
             message.Visible = false
         end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.V then
+        fovVisible = not fovVisible
+        FOVring.Visible = fovVisible
+        Tracer.Visible = fovVisible
     end
 end)
