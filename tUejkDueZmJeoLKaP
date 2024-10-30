@@ -8,7 +8,7 @@ local LastFace = Vector3.new(0,0,0)
 local DirChange = 0
 
 local Bind = Enum.KeyCode.Space
-local Strength = 7
+local Strength = 8
 
 local UseGradient = true
 local GradientCentre = 3
