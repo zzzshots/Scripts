@@ -1,6 +1,6 @@
 local FGrab = {
 	Size = 4,
-	Keybind = Enum.KeyCode.Space
+	Keybind = Enum.KeyCode.V
 }
 
 local Folder = Instance.new("Folder")
