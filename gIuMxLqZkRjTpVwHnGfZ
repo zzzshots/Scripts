@@ -1,5 +1,5 @@
 local FGrab = {
-	Size = 7,
+	Size = 6,
 	Keybind = Enum.KeyCode.V
 }
 
