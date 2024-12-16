@@ -11,7 +11,7 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 
 local message = Drawing.new("Text")
-message.Text = "Timebomb Autotrack [TEST] (If you have any inquiries, dm @kmlt on discord!)"
+message.Text = "Timebomb Autotrack [TEST]"
 message.Size = 30
 message.Color = Color3.fromRGB(255, 255, 255)
 message.Position = Vector2.new(0, 0)
