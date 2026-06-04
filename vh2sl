@@ -243,14 +243,6 @@ local function getClosestPlayer()
 end
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/Library.lua"))()
-Library:OnUnload(function()
-    mouse_box:Remove()
-    fov_circle:Remove()
-    hookmetamethod(game, "__namecall", oldNamecall)
-    hookmetamethod(game, "__index", oldIndex)
-    getgenv().SilentAimSettings = nil
-    Library.Unloaded = true
-end)
 
 local Window = Library:CreateWindow({Title = 'VH2 Silent Aim - (@333shots)', Center = true, AutoShow = true, TabPadding = 8, MenuFadeTime = 0.2})
 local GeneralTab = Window:AddTab("General")
@@ -380,14 +372,6 @@ local LoadConfigurationBOX = GeneralTab:AddRightTabbox("Load Configuration") do
             Options.Amount:SetValue(SilentAimSettings.MouseHitPredictionAmount)
             Options.HitChance:SetValue(SilentAimSettings.HitChance)
         end
-    end)
-end
-
-local PanicBOX = GeneralTab:AddRightTabbox("Panic") do
-    local Main = PanicBOX:AddTab("Panic")
-
-    Main:AddButton("Panic / Unload", function()
-        Library:Unload()
     end)
 end
 
