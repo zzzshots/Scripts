@@ -8,20 +8,16 @@ end
 
 local SilentAimSettings = {
     Enabled = false,
-    
     ClassName = "VH2 Silent Aim - (@333shots)",
     ToggleKey = "RightAlt",
-    
     TeamCheck = false,
     TeamCheckMode = "Vampires",
     VisibleCheck = false, 
     TargetPart = "HumanoidRootPart",
     SilentAimMethod = "Raycast",
-    
     FOVRadius = 130,
     FOVVisible = false,
     ShowSilentAimTarget = false, 
-    
     MouseHitPrediction = false,
     MouseHitPredictionAmount = 0.165,
     HitChance = 100
@@ -125,26 +121,26 @@ end
 local Files = listfiles(string.format("%s/%s", "VH2SilentAim", tostring(game.PlaceId)))
 
 local function GetFiles()
-	local out = {}
-	for i = 1, #Files do
-		local file = Files[i]
-		if file:sub(-4) == '.lua' then
-			local pos = file:find('.lua', 1, true)
-			local start = pos
+    local out = {}
+    for i = 1, #Files do
+        local file = Files[i]
+        if file:sub(-4) == '.lua' then
+            local pos = file:find('.lua', 1, true)
+            local start = pos
 
-			local char = file:sub(pos, pos)
-			while char ~= '/' and char ~= '\\' and char ~= '' do
-				pos = pos - 1
-				char = file:sub(pos, pos)
-			end
+            local char = file:sub(pos, pos)
+            while char ~= '/' and char ~= '\\' and char ~= '' do
+                pos = pos - 1
+                char = file:sub(pos, pos)
+            end
 
-			if char == '/' or char == '\\' then
-				table.insert(out, file:sub(pos + 1, start - 1))
-			end
-		end
-	end
-	
-	return out
+            if char == '/' or char == '\\' then
+                table.insert(out, file:sub(pos + 1, start - 1))
+            end
+        end
+    end
+    
+    return out
 end
 
 local function UpdateFile(FileName)
@@ -285,7 +281,7 @@ local MainBOX = GeneralTab:AddLeftTabbox("Main") do
         SilentAimSettings.TeamCheckMode = Options.TeamCheckMode.Value
     end)
     Main:AddButton("Escape Vampire", function()
-    workspace:WaitForChild("Events"):WaitForChild("Vampire"):WaitForChild("EscapeVampire"):FireServer()
+        workspace:WaitForChild("Events"):WaitForChild("Vampire"):WaitForChild("EscapeVampire"):FireServer()
     end)
     Main:AddToggle("VisibleCheck", {Text = "Visible Check", Default = SilentAimSettings.VisibleCheck}):OnChanged(function()
         SilentAimSettings.VisibleCheck = Toggles.VisibleCheck.Value
@@ -522,86 +518,12 @@ local function getPlayerMode(player)
     return nil
 end
 
-local function refreshESP(player)
-    if not ESP.Enabled then
-        if ESP.Labels[player] then
-            ESP.Labels[player].Visible = false
-        end
-        return
-    end
-    local mode = getPlayerMode(player)
-    if mode == 2 then
-        if not ESP.Labels[player] then createLabel(player) end
-        ESP.Labels[player].Text = player.Name .. " [Detective]"
-        ESP.Labels[player].Color = Color3.fromRGB(0, 120, 255)
-    elseif mode == 3 then
-        if not ESP.Labels[player] then createLabel(player) end
-        ESP.Labels[player].Text = player.Name .. " [Vampire]"
-        ESP.Labels[player].Color = Color3.fromRGB(255, 50, 50)
-    else
-        if ESP.Labels[player] then
-            ESP.Labels[player].Visible = false
-        end
-    end
-end
-
-local function refreshAllESP()
-    for _, player in next, Players:GetPlayers() do
-        if player ~= LocalPlayer then
-            refreshESP(player)
-        end
-    end
-end
-
 local function watchPlayer(player)
     if player == LocalPlayer then return end
     createLabel(player)
-    local modeConnection
-    local charConnection
-    local diedConnection
-
-    local function connectMode()
-        local success, modeObj = pcall(function()
-            return workspace.GameData.Players[player.Name].Mode
-        end)
-        if success and modeObj then
-            if modeConnection then modeConnection:Disconnect() end
-            modeConnection = modeObj.Changed:Connect(function()
-                refreshESP(player)
-            end)
-            refreshESP(player)
-        end
-    end
-
-    local function connectChar(char)
-        if diedConnection then diedConnection:Disconnect() end
-        local humanoid = char:WaitForChild("Humanoid", 5)
-        if humanoid then
-            diedConnection = humanoid.Died:Connect(function()
-                if ESP.Labels[player] then
-                    ESP.Labels[player].Visible = false
-                end
-            end)
-        end
-    end
-
-    if player.Character then connectChar(player.Character) end
-    charConnection = player.CharacterAdded:Connect(function(char)
-        connectChar(char)
-        task.wait(1)
-        connectMode()
-    end)
-
-    task.spawn(function()
-        task.wait(1)
-        connectMode()
-    end)
 
     player.AncestryChanged:Connect(function()
         if not player.Parent then
-            if modeConnection then modeConnection:Disconnect() end
-            if charConnection then charConnection:Disconnect() end
-            if diedConnection then diedConnection:Disconnect() end
             removeLabel(player)
         end
     end)
@@ -619,21 +541,14 @@ Players.PlayerRemoving:Connect(function(player)
     removeLabel(player)
 end)
 
-task.spawn(function()
-    local success, roundObj = pcall(function()
-        return workspace.GameData.Round
-    end)
-    if success and roundObj then
-        roundObj.Changed:Connect(function()
-            task.wait(2)
-            refreshAllESP()
-        end)
-    end
-end)
-
 resume(create(function()
     RenderStepped:Connect(function()
-        if not ESP.Enabled then return end
+        if not ESP.Enabled then 
+            for _, label in next, ESP.Labels do
+                if label then label.Visible = false end
+            end
+            return 
+        end
         for player, label in next, ESP.Labels do
             if not label then continue end
             local character = player.Character
@@ -642,6 +557,19 @@ resume(create(function()
             if not humanoid or humanoid.Health <= 0 then label.Visible = false continue end
             local root = character:FindFirstChild("HumanoidRootPart")
             if not root then label.Visible = false continue end
+            
+            local mode = getPlayerMode(player)
+            if mode == 2 then
+                label.Text = player.Name .. " [Detective]"
+                label.Color = Color3.fromRGB(0, 120, 255)
+            elseif mode == 3 then
+                label.Text = player.Name .. " [Vampire]"
+                label.Color = Color3.fromRGB(255, 50, 50)
+            else
+                label.Visible = false
+                continue
+            end
+
             local screenPos, onScreen = WorldToViewportPoint(Camera, root.Position + Vector3.new(0, 3, 0))
             if onScreen then
                 label.Visible = true
