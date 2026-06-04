@@ -110,8 +110,9 @@ end
 
 do 
     if not isfolder(MainFileName) then 
-        makefolder(MainFileName)
+        makefolder(MainFileName);
     end
+    
     if not isfolder(string.format("%s/%s", MainFileName, tostring(game.PlaceId))) then 
         makefolder(string.format("%s/%s", MainFileName, tostring(game.PlaceId)))
     end
@@ -120,32 +121,36 @@ end
 local Files = listfiles(string.format("%s/%s", "VH2SilentAim", tostring(game.PlaceId)))
 
 local function GetFiles()
-    local out = {}
-    for i = 1, #Files do
-        local file = Files[i]
-        if file:sub(-4) == '.lua' then
-            local pos = file:find('.lua', 1, true)
-            local start = pos
-            local char = file:sub(pos, pos)
-            while char ~= '/' and char ~= '\\' and char ~= '' do
-                pos = pos - 1
-                char = file:sub(pos, pos)
-            end
-            if char == '/' or char == '\\' then
-                table.insert(out, file:sub(pos + 1, start - 1))
-            end
-        end
-    end
-    return out
+	local out = {}
+	for i = 1, #Files do
+		local file = Files[i]
+		if file:sub(-4) == '.lua' then
+			local pos = file:find('.lua', 1, true)
+			local start = pos
+
+			local char = file:sub(pos, pos)
+			while char ~= '/' and char ~= '\\' and char ~= '' do
+				pos = pos - 1
+				char = file:sub(pos, pos)
+			end
+
+			if char == '/' or char == '\\' then
+				table.insert(out, file:sub(pos + 1, start - 1))
+			end
+		end
+	end
+	
+	return out
 end
 
 local function UpdateFile(FileName)
-    assert(FileName or FileName == "string", "oopsies")
+    assert(FileName or FileName == "string", "oopsies");
     writefile(string.format("%s/%s/%s.lua", MainFileName, tostring(game.PlaceId), FileName), HttpService:JSONEncode(SilentAimSettings))
 end
 
 local function LoadFile(FileName)
-    assert(FileName or FileName == "string", "oopsies")
+    assert(FileName or FileName == "string", "oopsies");
+    
     local File = string.format("%s/%s/%s.lua", MainFileName, tostring(game.PlaceId), FileName)
     local ConfigData = HttpService:JSONDecode(readfile(File))
     for Index, Value in next, ConfigData do
@@ -182,11 +187,16 @@ end
 local function IsPlayerVisible(Player)
     local PlayerCharacter = Player.Character
     local LocalPlayerCharacter = LocalPlayer.Character
+    
     if not (PlayerCharacter or LocalPlayerCharacter) then return end 
+    
     local PlayerRoot = FindFirstChild(PlayerCharacter, Options.TargetPart.Value) or FindFirstChild(PlayerCharacter, "HumanoidRootPart")
+    
     if not PlayerRoot then return end 
+    
     local CastPoints, IgnoreList = {PlayerRoot.Position, LocalPlayerCharacter, PlayerCharacter}, {LocalPlayerCharacter, PlayerCharacter}
     local ObscuringObjects = #GetPartsObscuringTarget(Camera, CastPoints, IgnoreList)
+    
     return ((ObscuringObjects == 0 and true) or (ObscuringObjects > 0 and false))
 end
 
@@ -204,7 +214,8 @@ local function getClosestPlayer()
                 return workspace.GameData.Players[Player.Name].Mode
             end)
             if success and playerModeObj then
-                if playerModeObj.Value ~= targetMode then continue end
+                local playerMode = playerModeObj.Value
+                if playerMode ~= targetMode then continue end
             else
                 continue
             end
@@ -212,6 +223,7 @@ local function getClosestPlayer()
 
         local Character = Player.Character
         if not Character then continue end
+        
         if Toggles.VisibleCheck.Value and not IsPlayerVisible(Player) then continue end
 
         local HumanoidRootPart = FindFirstChild(Character, "HumanoidRootPart")
@@ -230,101 +242,20 @@ local function getClosestPlayer()
     return Closest
 end
 
--- hooks defined BEFORE OnUnload so they're in scope
-local oldNamecall
-oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(...)
-    local Method = getnamecallmethod()
-    local Arguments = {...}
-    local self = Arguments[1]
-    local chance = CalculateChance(SilentAimSettings.HitChance)
-    if Toggles.aim_Enabled.Value and self == workspace and not checkcaller() and chance == true then
-        if Method == "FindPartOnRayWithIgnoreList" and Options.Method.Value == Method then
-            if ValidateArguments(Arguments, ExpectedArguments.FindPartOnRayWithIgnoreList) then
-                local A_Ray = Arguments[2]
-                local HitPart = getClosestPlayer()
-                if HitPart then
-                    local Origin = A_Ray.Origin
-                    local Direction = getDirection(Origin, HitPart.Position)
-                    Arguments[2] = Ray.new(Origin, Direction)
-                    return oldNamecall(unpack(Arguments))
-                end
-            end
-        elseif Method == "FindPartOnRayWithWhitelist" and Options.Method.Value == Method then
-            if ValidateArguments(Arguments, ExpectedArguments.FindPartOnRayWithWhitelist) then
-                local A_Ray = Arguments[2]
-                local HitPart = getClosestPlayer()
-                if HitPart then
-                    local Origin = A_Ray.Origin
-                    local Direction = getDirection(Origin, HitPart.Position)
-                    Arguments[2] = Ray.new(Origin, Direction)
-                    return oldNamecall(unpack(Arguments))
-                end
-            end
-        elseif (Method == "FindPartOnRay" or Method == "findPartOnRay") and Options.Method.Value:lower() == Method:lower() then
-            if ValidateArguments(Arguments, ExpectedArguments.FindPartOnRay) then
-                local A_Ray = Arguments[2]
-                local HitPart = getClosestPlayer()
-                if HitPart then
-                    local Origin = A_Ray.Origin
-                    local Direction = getDirection(Origin, HitPart.Position)
-                    Arguments[2] = Ray.new(Origin, Direction)
-                    return oldNamecall(unpack(Arguments))
-                end
-            end
-        elseif Method == "Raycast" and Options.Method.Value == Method then
-            if ValidateArguments(Arguments, ExpectedArguments.Raycast) then
-                local A_Origin = Arguments[2]
-                local HitPart = getClosestPlayer()
-                if HitPart then
-                    Arguments[3] = getDirection(A_Origin, HitPart.Position)
-                    return oldNamecall(unpack(Arguments))
-                end
-            end
-        end
-    end
-    return oldNamecall(...)
-end))
-
-local oldIndex = nil 
-oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, Index)
-    if self == Mouse and not checkcaller() and Toggles.aim_Enabled.Value and Options.Method.Value == "Mouse.Hit/Target" and getClosestPlayer() then
-        local HitPart = getClosestPlayer()
-        if Index == "Target" or Index == "target" then 
-            return HitPart
-        elseif Index == "Hit" or Index == "hit" then 
-            return ((Toggles.Prediction.Value and (HitPart.CFrame + (HitPart.Velocity * PredictionAmount))) or (not Toggles.Prediction.Value and HitPart.CFrame))
-        elseif Index == "X" or Index == "x" then 
-            return self.X 
-        elseif Index == "Y" or Index == "y" then 
-            return self.Y 
-        elseif Index == "UnitRay" then 
-            return Ray.new(self.Origin, (self.Hit - self.Origin).Unit)
-        end
-    end
-    return oldIndex(self, Index)
-end))
-
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/Library.lua"))()
-
-Library:OnUnload(function()
-    mouse_box:Remove()
-    fov_circle:Remove()
-    hookmetamethod(game, "__namecall", oldNamecall)
-    hookmetamethod(game, "__index", oldIndex)
-    getgenv().SilentAimSettings = nil
-    Library.Unloaded = true
-end)
 
 local Window = Library:CreateWindow({Title = 'VH2 Silent Aim - (@333shots)', Center = true, AutoShow = true, TabPadding = 8, MenuFadeTime = 0.2})
 local GeneralTab = Window:AddTab("General")
 local MainBOX = GeneralTab:AddLeftTabbox("Main") do
     local Main = MainBOX:AddTab("Main")
     
-    Main:AddToggle("aim_Enabled", {Text = "Enabled"}):AddKeyPicker("aim_Enabled_KeyPicker", {Default = "RightAlt", SyncToggleState = true, Mode = "Toggle", Text = "Enabled", NoUI = false})
+    Main:AddToggle("aim_Enabled", {Text = "Enabled"}):AddKeyPicker("aim_Enabled_KeyPicker", {Default = "RightAlt", SyncToggleState = true, Mode = "Toggle", Text = "Enabled", NoUI = false});
     Options.aim_Enabled_KeyPicker:OnClick(function()
         SilentAimSettings.Enabled = not SilentAimSettings.Enabled
+        
         Toggles.aim_Enabled.Value = SilentAimSettings.Enabled
         Toggles.aim_Enabled:SetValue(SilentAimSettings.Enabled)
+        
         mouse_box.Visible = SilentAimSettings.Enabled
     end)
     
@@ -340,7 +271,7 @@ local MainBOX = GeneralTab:AddLeftTabbox("Main") do
         SilentAimSettings.TeamCheckMode = Options.TeamCheckMode.Value
     end)
     Main:AddButton("Escape Vampire", function()
-        workspace:WaitForChild("Events"):WaitForChild("Vampire"):WaitForChild("EscapeVampire"):FireServer()
+    workspace:WaitForChild("Events"):WaitForChild("Vampire"):WaitForChild("EscapeVampire"):FireServer()
     end)
     Main:AddToggle("VisibleCheck", {Text = "Visible Check", Default = SilentAimSettings.VisibleCheck}):OnChanged(function()
         SilentAimSettings.VisibleCheck = Toggles.VisibleCheck.Value
@@ -397,11 +328,13 @@ end
 
 local CreateConfigurationBOX = GeneralTab:AddRightTabbox("Create Configuration") do 
     local Main = CreateConfigurationBOX:AddTab("Create Configuration")
+    
     Main:AddInput("CreateConfigTextBox", {Default = "", Numeric = false, Finished = false, Text = "Create Configuration to Create", Tooltip = "Creates a configuration file containing settings you can save and load", Placeholder = "File Name here"}):OnChanged(function()
         if Options.CreateConfigTextBox.Value and string.len(Options.CreateConfigTextBox.Value) ~= "" then 
             FileToSave = Options.CreateConfigTextBox.Value
         end
     end)
+    
     Main:AddButton("Create Configuration File", function()
         if FileToSave ~= "" or FileToSave ~= nil then 
             UpdateFile(FileToSave)
@@ -421,10 +354,12 @@ end
 
 local LoadConfigurationBOX = GeneralTab:AddRightTabbox("Load Configuration") do 
     local Main = LoadConfigurationBOX:AddTab("Load Configuration")
+    
     Main:AddDropdown("LoadConfigurationDropdown", {AllowNull = true, Values = GetFiles(), Text = "Choose Configuration to Load"})
     Main:AddButton("Load Configuration", function()
         if table.find(GetFiles(), Options.LoadConfigurationDropdown.Value) then
             LoadFile(Options.LoadConfigurationDropdown.Value)
+            
             Toggles.TeamCheck:SetValue(SilentAimSettings.TeamCheck)
             Options.TeamCheckMode:SetValue(SilentAimSettings.TeamCheckMode)
             Toggles.VisibleCheck:SetValue(SilentAimSettings.VisibleCheck)
@@ -440,8 +375,18 @@ local LoadConfigurationBOX = GeneralTab:AddRightTabbox("Load Configuration") do
     end)
 end
 
+Library:OnUnload(function()
+    mouse_box:Remove()
+    fov_circle:Remove()
+    hookmetamethod(game, "__namecall", oldNamecall)
+    hookmetamethod(game, "__index", oldIndex)
+    getgenv().SilentAimSettings = nil
+    Library.Unloaded = true
+end)
+
 local PanicBOX = GeneralTab:AddRightTabbox("Panic") do
     local Main = PanicBOX:AddTab("Panic")
+
     Main:AddButton("Panic / Unload", function()
         Library:Unload()
     end)
@@ -449,11 +394,11 @@ end
 
 resume(create(function()
     RenderStepped:Connect(function()
-        if Library.Unloaded then return end
         if Toggles.MousePosition.Value and Toggles.aim_Enabled.Value then
             if getClosestPlayer() then 
                 local Root = getClosestPlayer().Parent.PrimaryPart or getClosestPlayer()
-                local RootToViewportPoint, IsOnScreen = WorldToViewportPoint(Camera, Root.Position)
+                local RootToViewportPoint, IsOnScreen = WorldToViewportPoint(Camera, Root.Position);
+                
                 mouse_box.Visible = IsOnScreen
                 mouse_box.Position = Vector2.new(RootToViewportPoint.X, RootToViewportPoint.Y)
             else 
@@ -461,10 +406,94 @@ resume(create(function()
                 mouse_box.Position = Vector2.new()
             end
         end
+        
         if Toggles.Visible.Value then 
             fov_circle.Visible = Toggles.Visible.Value
             fov_circle.Color = Options.Color.Value
             fov_circle.Position = getMousePosition()
         end
     end)
+end))
+
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(...)
+    local Method = getnamecallmethod()
+    local Arguments = {...}
+    local self = Arguments[1]
+    local chance = CalculateChance(SilentAimSettings.HitChance)
+    if Toggles.aim_Enabled.Value and self == workspace and not checkcaller() and chance == true then
+        if Method == "FindPartOnRayWithIgnoreList" and Options.Method.Value == Method then
+            if ValidateArguments(Arguments, ExpectedArguments.FindPartOnRayWithIgnoreList) then
+                local A_Ray = Arguments[2]
+
+                local HitPart = getClosestPlayer()
+                if HitPart then
+                    local Origin = A_Ray.Origin
+                    local Direction = getDirection(Origin, HitPart.Position)
+                    Arguments[2] = Ray.new(Origin, Direction)
+
+                    return oldNamecall(unpack(Arguments))
+                end
+            end
+        elseif Method == "FindPartOnRayWithWhitelist" and Options.Method.Value == Method then
+            if ValidateArguments(Arguments, ExpectedArguments.FindPartOnRayWithWhitelist) then
+                local A_Ray = Arguments[2]
+
+                local HitPart = getClosestPlayer()
+                if HitPart then
+                    local Origin = A_Ray.Origin
+                    local Direction = getDirection(Origin, HitPart.Position)
+                    Arguments[2] = Ray.new(Origin, Direction)
+
+                    return oldNamecall(unpack(Arguments))
+                end
+            end
+        elseif (Method == "FindPartOnRay" or Method == "findPartOnRay") and Options.Method.Value:lower() == Method:lower() then
+            if ValidateArguments(Arguments, ExpectedArguments.FindPartOnRay) then
+                local A_Ray = Arguments[2]
+
+                local HitPart = getClosestPlayer()
+                if HitPart then
+                    local Origin = A_Ray.Origin
+                    local Direction = getDirection(Origin, HitPart.Position)
+                    Arguments[2] = Ray.new(Origin, Direction)
+
+                    return oldNamecall(unpack(Arguments))
+                end
+            end
+        elseif Method == "Raycast" and Options.Method.Value == Method then
+            if ValidateArguments(Arguments, ExpectedArguments.Raycast) then
+                local A_Origin = Arguments[2]
+
+                local HitPart = getClosestPlayer()
+                if HitPart then
+                    Arguments[3] = getDirection(A_Origin, HitPart.Position)
+
+                    return oldNamecall(unpack(Arguments))
+                end
+            end
+        end
+    end
+    return oldNamecall(...)
+end))
+
+local oldIndex = nil 
+oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, Index)
+    if self == Mouse and not checkcaller() and Toggles.aim_Enabled.Value and Options.Method.Value == "Mouse.Hit/Target" and getClosestPlayer() then
+        local HitPart = getClosestPlayer()
+         
+        if Index == "Target" or Index == "target" then 
+            return HitPart
+        elseif Index == "Hit" or Index == "hit" then 
+            return ((Toggles.Prediction.Value and (HitPart.CFrame + (HitPart.Velocity * PredictionAmount))) or (not Toggles.Prediction.Value and HitPart.CFrame))
+        elseif Index == "X" or Index == "x" then 
+            return self.X 
+        elseif Index == "Y" or Index == "y" then 
+            return self.Y 
+        elseif Index == "UnitRay" then 
+            return Ray.new(self.Origin, (self.Hit - self.Origin).Unit)
+        end
+    end
+
+    return oldIndex(self, Index)
 end))
