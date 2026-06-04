@@ -563,7 +563,8 @@ resume(create(function()
                 label.Text = player.Name .. " [Detective]"
                 label.Color = Color3.fromRGB(0, 120, 255)
             elseif mode == 3 then
-                label.Text = player.Name .. " [Vampire]"
+                local hpPercent = math.floor((humanoid.Health / humanoid.MaxHealth) * 100)
+                label.Text = player.Name .. " [Vampire] (" .. hpPercent .. "%)"
                 label.Color = Color3.fromRGB(255, 50, 50)
             else
                 label.Visible = false
