@@ -20,7 +20,9 @@ local SilentAimSettings = {
     ShowSilentAimTarget = false, 
     MouseHitPrediction = false,
     MouseHitPredictionAmount = 0.165,
-    HitChance = 100
+    HitChance = 100,
+    ESPEnabled = false,
+    SurvivorESPEnabled = false
 }
 
 getgenv().SilentAimSettings = Settings
@@ -38,6 +40,7 @@ local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local ESP = {
     Enabled = false,
+    SurvivorEnabled = false,
     Labels = {}
 }
 
@@ -145,6 +148,22 @@ end
 
 local function UpdateFile(FileName)
     assert(FileName or FileName == "string", "oopsies");
+    
+    SilentAimSettings.Enabled = Toggles.aim_Enabled.Value
+    SilentAimSettings.TeamCheck = Toggles.TeamCheck.Value
+    SilentAimSettings.TeamCheckMode = Options.TeamCheckMode.Value
+    SilentAimSettings.VisibleCheck = Toggles.VisibleCheck.Value
+    SilentAimSettings.TargetPart = Options.TargetPart.Value
+    SilentAimSettings.SilentAimMethod = Options.Method.Value
+    SilentAimSettings.HitChance = Options.HitChance.Value
+    SilentAimSettings.FOVVisible = Toggles.Visible.Value
+    SilentAimSettings.FOVRadius = Options.Radius.Value
+    SilentAimSettings.ShowSilentAimTarget = Toggles.MousePosition.Value
+    SilentAimSettings.MouseHitPrediction = Toggles.Prediction.Value
+    SilentAimSettings.MouseHitPredictionAmount = Options.Amount.Value
+    SilentAimSettings.ESPEnabled = Toggles.ESPEnabled.Value
+    SilentAimSettings.SurvivorESPEnabled = Toggles.SurvivorESPEnabled.Value
+
     writefile(string.format("%s/%s/%s.lua", MainFileName, tostring(game.PlaceId), FileName), HttpService:JSONEncode(SilentAimSettings))
 end
 
@@ -265,7 +284,16 @@ local MainBOX = GeneralTab:AddLeftTabbox("Main") do
     
     Main:AddToggle("ESPEnabled", {Text = "Vamp/Detective ESP", Default = false}):OnChanged(function()
         ESP.Enabled = Toggles.ESPEnabled.Value
-        if not ESP.Enabled then
+        if not ESP.Enabled and not ESP.SurvivorEnabled then
+            for _, label in next, ESP.Labels do
+                if label then label.Visible = false end
+            end
+        end
+    end)
+
+    Main:AddToggle("SurvivorESPEnabled", {Text = "Survivor ESP", Default = false}):OnChanged(function()
+        ESP.SurvivorEnabled = Toggles.SurvivorESPEnabled.Value
+        if not ESP.Enabled and not ESP.SurvivorEnabled then
             for _, label in next, ESP.Labels do
                 if label then label.Visible = false end
             end
@@ -370,6 +398,7 @@ local LoadConfigurationBOX = GeneralTab:AddRightTabbox("Load Configuration") do
         if table.find(GetFiles(), Options.LoadConfigurationDropdown.Value) then
             LoadFile(Options.LoadConfigurationDropdown.Value)
             
+            Toggles.aim_Enabled:SetValue(SilentAimSettings.Enabled)
             Toggles.TeamCheck:SetValue(SilentAimSettings.TeamCheck)
             Options.TeamCheckMode:SetValue(SilentAimSettings.TeamCheckMode)
             Toggles.VisibleCheck:SetValue(SilentAimSettings.VisibleCheck)
@@ -381,6 +410,8 @@ local LoadConfigurationBOX = GeneralTab:AddRightTabbox("Load Configuration") do
             Toggles.Prediction:SetValue(SilentAimSettings.MouseHitPrediction)
             Options.Amount:SetValue(SilentAimSettings.MouseHitPredictionAmount)
             Options.HitChance:SetValue(SilentAimSettings.HitChance)
+            Toggles.ESPEnabled:SetValue(SilentAimSettings.ESPEnabled or false)
+            Toggles.SurvivorESPEnabled:SetValue(SilentAimSettings.SurvivorESPEnabled or false)
         end
     end)
 end
@@ -543,7 +574,7 @@ end)
 
 resume(create(function()
     RenderStepped:Connect(function()
-        if not ESP.Enabled then 
+        if not ESP.Enabled and not ESP.SurvivorEnabled then 
             for _, label in next, ESP.Labels do
                 if label then label.Visible = false end
             end
@@ -559,22 +590,31 @@ resume(create(function()
             if not root then label.Visible = false continue end
             
             local mode = getPlayerMode(player)
-            if mode == 2 then
+            local displayed = false
+
+            if mode == 1 and ESP.SurvivorEnabled then
+                label.Text = player.Name .. " [Survivor]"
+                label.Color = Color3.fromRGB(50, 255, 50)
+                displayed = true
+            elseif mode == 2 and ESP.Enabled then
                 label.Text = player.Name .. " [Detective]"
                 label.Color = Color3.fromRGB(0, 120, 255)
-            elseif mode == 3 then
+                displayed = true
+            elseif mode == 3 and ESP.Enabled then
                 local hpPercent = math.floor((humanoid.Health / humanoid.MaxHealth) * 100)
                 label.Text = player.Name .. " [Vampire] (" .. hpPercent .. "%)"
                 label.Color = Color3.fromRGB(255, 50, 50)
-            else
-                label.Visible = false
-                continue
+                displayed = true
             end
 
-            local screenPos, onScreen = WorldToViewportPoint(Camera, root.Position + Vector3.new(0, 3, 0))
-            if onScreen then
-                label.Visible = true
-                label.Position = Vector2.new(screenPos.X, screenPos.Y)
+            if displayed then
+                local screenPos, onScreen = WorldToViewportPoint(Camera, root.Position + Vector3.new(0, 3, 0))
+                if onScreen then
+                    label.Visible = true
+                    label.Position = Vector2.new(screenPos.X, screenPos.Y)
+                else
+                    label.Visible = false
+                end
             else
                 label.Visible = false
             end
